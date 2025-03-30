@@ -2,8 +2,10 @@ package rocketseat.com.pass_in.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 import rocketseat.com.pass_in.domain.attendee.Attendee;
 import rocketseat.com.pass_in.domain.event.Event;
+import rocketseat.com.pass_in.domain.event.exceptions.EventNotFoundException;
 import rocketseat.com.pass_in.dto.event.EventIdDTO;
 import rocketseat.com.pass_in.dto.event.EventRequestDTO;
 import rocketseat.com.pass_in.dto.event.EventResponseDTO;
@@ -20,7 +22,7 @@ public class EventService {
     private final AttendeeRepository attendeeRepository;
 
     public EventResponseDTO getEventDetail(String eventId) {
-        Event event = this.eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+        Event event = this.eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
         List<Attendee> attendeeList = this.attendeeRepository.findByEventId(eventId);
         return new EventResponseDTO(event, attendeeList.size());
     }
@@ -31,7 +33,7 @@ public class EventService {
         newEvent.setTitle(eventDTO.title());
         newEvent.setDetails(eventDTO.details());
         newEvent.setMaximumAttendees(eventDTO.maximumAttendees());
-        newEvent.setSlug(createSlug(eventDTO.title()));
+        newEvent.setSlug(this.createSlug(eventDTO.title()));
 
         this.eventRepository.save(newEvent);
 
