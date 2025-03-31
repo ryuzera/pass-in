@@ -11,6 +11,7 @@ import rocketseat.com.pass_in.dto.event.EventResponseDTO;
 import rocketseat.com.pass_in.repositories.EventRepository;
 
 import java.text.Normalizer;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,8 +39,21 @@ public class EventService {
         return new EventIdDTO(newEvent.getId());
     }
 
-    public void registerAttendeeOnEvent(){
-        this.attendeeService.verifyAttendeeSubscription();
+    public void registerAttendeeOnEvent(String eventId, AttendeeRequestDTO attendeeRequestDTO) {
+        this.attendeeService.verifyAttendeeSubscription(attendeeRequestDTO.email(), eventId);
+
+        Event event = this.eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
+        List<Attendee> attendeeList = this.attendeeService.getAllAttendeesFromEvent(eventId);
+
+        if(event.getMaximumAttendees() <= attendeeList.size()) throw new EventFullException("Event is full!");
+
+        Attendee newAttendee = new Attendee();
+        newAttendee.setName(attendeeRequestDTO.name());
+        newAttendee.setEmail(attendeeRequestDTO.email());
+        newAttendee.setEvent(event);
+        newAttendee.setCreatedAt(LocalDateTime.now());
+        this.attendeeService.registerAttendee(newAttendee);
+
     }
 
     private String createSlug(String text) {
