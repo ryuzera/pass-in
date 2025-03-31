@@ -24,7 +24,11 @@ public class CheckInService {
     }
 
     private void verifyCheckInExists(String attendeeId) {
-        Optional<Checkin> isCheckedIn = this.checkinRepository.findByAttendeeId(attendeeId);
+        Optional<Checkin> isCheckedIn = this.getCheckin(attendeeId);
         if (isCheckedIn.isPresent()) throw new CheckInAlreadyExistException("Attendee with id: " + attendeeId + " already exists!");
+    }
+
+    public Optional<Checkin> getCheckin(String attendeeId) {
+        return this.checkinRepository.findByAttendeeId(attendeeId);
     }
 }
