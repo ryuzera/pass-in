@@ -4,7 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import rocketseat.com.pass_in.domain.attendee.Attendee;
 import rocketseat.com.pass_in.domain.event.Event;
+import rocketseat.com.pass_in.domain.event.exceptions.EventFullException;
 import rocketseat.com.pass_in.domain.event.exceptions.EventNotFoundException;
+import rocketseat.com.pass_in.dto.attendee.AttendeeIdDTO;
+import rocketseat.com.pass_in.dto.attendee.AttendeeRequestDTO;
 import rocketseat.com.pass_in.dto.event.EventIdDTO;
 import rocketseat.com.pass_in.dto.event.EventRequestDTO;
 import rocketseat.com.pass_in.dto.event.EventResponseDTO;
@@ -21,7 +24,7 @@ public class EventService {
     private final AttendeeService attendeeService;
 
     public EventResponseDTO getEventDetail(String eventId) {
-        Event event = this.eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
+        Event event = this.getEventById(eventId);
         List<Attendee> attendeeList = this.attendeeService.getAllAttendeesFromEvent(eventId);
         return new EventResponseDTO(event, attendeeList.size());
     }
@@ -39,10 +42,10 @@ public class EventService {
         return new EventIdDTO(newEvent.getId());
     }
 
-    public void registerAttendeeOnEvent(String eventId, AttendeeRequestDTO attendeeRequestDTO) {
+    public AttendeeIdDTO registerAttendeeOnEvent(String eventId, AttendeeRequestDTO attendeeRequestDTO) {
         this.attendeeService.verifyAttendeeSubscription(attendeeRequestDTO.email(), eventId);
 
-        Event event = this.eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
+        Event event = this.getEventById(eventId);
         List<Attendee> attendeeList = this.attendeeService.getAllAttendeesFromEvent(eventId);
 
         if(event.getMaximumAttendees() <= attendeeList.size()) throw new EventFullException("Event is full!");
@@ -54,6 +57,11 @@ public class EventService {
         newAttendee.setCreatedAt(LocalDateTime.now());
         this.attendeeService.registerAttendee(newAttendee);
 
+        return new AttendeeIdDTO(newAttendee.getId());
+    }
+
+    private Event getEventById(String eventId) {
+        return this.eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
     }
 
     private String createSlug(String text) {
