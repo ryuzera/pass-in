@@ -34,4 +34,16 @@ public class AttendeeService {
 
         return new AttendeesListResponseDTO(attendeeDetailsList);
     }
+
+    public void verifyAttendeeSubscription(String email, String eventId) {
+        Optional<Attendee> isAttendeeRegistered = this.attendeeRepository.findByEventIdAndEmail(eventId, email);
+        if (isAttendeeRegistered.isPresent()) throw new RuntimeException("Attendee is already registered!");
+    }
+
+    public Attendee registerAttendee(Attendee newAttendee) {
+        this.attendeeRepository.save(newAttendee);
+        return newAttendee;
+    }
+
+
 }
